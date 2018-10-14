@@ -1,0 +1,32 @@
+---
+meta:
+  name:   load-balancer
+  target: genesis@pipes
+  url:    https://pipes.starkandwayne.com
+
+  initial_version: 0.0.1
+
+  aws:
+    access_key: (( vault "secret/pipelines/aws/cf-community:access" ))
+    secret_key: (( vault "secret/pipelines/aws/cf-community:secret" ))
+
+  git:
+    name: Stark & Wayne CI Bot
+    email: ci@starkandwayne.com
+
+  github:
+    owner: genesis-community
+    repo: load-balancer-boshrelease
+    private_key:  (( vault "secret/pipelines/github/starkandwayne/genesis-bot:private" ))
+    access_token: (( vault "secret/pipelines/github/starkandwayne/genesis-bot:access_token" ))
+
+  bosh-lite:
+    target:   https://10.200.131.9:25555
+    username: admin
+    password: (( vault "secret/thunder/dome/bosh/users/admin:password" ))
+    cacert:   (( vault "secret/thunder/dome/bosh/ssl/ca:certificate" ))
+
+  shout:
+    url:      http://10.200.131.1:7109
+    username: ops
+    password: (( vault "secret/buffalo/lab/concourse/shout/ops:password" ))

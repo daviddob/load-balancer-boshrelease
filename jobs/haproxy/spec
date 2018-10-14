@@ -1,0 +1,109 @@
+---
+name: haproxy
+
+description: "The HAProxy server can be used to terminate SSL in front of the Routers. Each HAProxy instance should point to multiple Routers."
+
+packages:
+- haproxy
+- ttar
+
+templates:
+  config/haproxy.config:      config/haproxy.config
+  bin/haproxy:                bin/haproxy
+  config/certs.ttar:          config/certs.ttar
+  config/redir.ttar:          config/redir.ttar
+
+properties:
+
+  # General
+  config:
+    description: |
+      ADVANCED: Ignores all other options and provide the haproxy.config file explicitly.
+
+  processes:
+    description: "Optional number of processes per VM"
+    default: 1
+  syslog-server:
+    description: "An IPv4 address optionally followed by a colon and a UDP port. It can also be an IPv6 address or filesystem path to a UNIX domain socket."
+    default: "/dev/log"
+  log-level:
+    description: "Log level"
+    default: "info"
+  buffer-size-bytes:
+    description: "Buffer size to use for requests, any requests larger than this (large cookies or query strings) will result in a gateway error"
+    default: 16384
+  compress_types:
+    description: |
+      List of mime-types to be compressed, such as 'text/html', 'text/plain', and 'text/css'
+    default: []
+
+  # Timeouts
+  timeouts.connect:
+    description: "Timeout (in floating point seconds) used on connections from haproxy to a backend, while waiting for the TCP handshake to complete + connection to establish"
+    default:     5
+  timeouts.client:
+    description: "Timeout (in floating point seconds) used on connections from a client to haproxy that have gone inactive"
+    default:     30
+  timeouts.server:
+    description: "Timeout (in floating point seconds) used on connections from haproxy to a backend, while waiting for data from the backend"
+    default:     30
+  timeouts.websocket:
+    description: "Timeout (in floating point seconds) used on websocket/tunnel traffic, when both ends of the conversation have become inactive"
+    default:     3600
+  timeouts.keepalive:
+    description: "Timeout (in floating point seconds) applied to any connection that is in an http-keepalive state, waiting for the next request to occur"
+    default:     0.5
+  timeouts.request:
+    description: "Timeout (in floating point seconds) applied to any connection to limit the maximum time for a complete HTTP request (headers only). Used to limit DoS attacks that send data slowly to not trigger the client/server timeouts"
+    default:     5
+  timeouts.queue:
+    description: "Timeout (in floating point seconds) used on any connection sitting in the pending queue, waiting to be sent to the backend, to limit its time being queued"
+    default:     30
+
+  # TLS
+  tls.default-protocols:
+    description: |
+      The default allowed protocols to use.  Valid array values are one or more of the following:
+      "ssl v3", "tls v1.0",  "tls v1.1",  "tls v1.2",  "tls tickets"
+    default: ["tls v1.2"]
+  tls.default-ciphers:
+    description: |
+      Colon-separated string of TLS ciphers that are passed to HAProxy
+    default: ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS
+  tls.default-dh-param:
+    description: |
+      Maximum size of DH params when generating epmehmeral keys during key exchange
+    default: 2048
+
+  load-balancers:
+    description: |-
+      Specify a list of load balancers to provide.  Each array element is composed of the following properties:
+
+        frontend:
+          accept_proxy:    true|false
+          mode:            Treat contents at level 7 (http) or level 4 (tcp) -- defaults to tcp
+          port:            Port to bind to - defaults to 443 if <this>.tls.certificates is specified, 80 otherwise
+          tls:
+            protocols:     List of allowed protocols -- defaults to `tls.default-protocols` if not specified, and uses the
+                           same valid values.
+            ciphers:       Colon-separated string of TLS ciphers allowed for this load balancer -- uses `tls.default-ciphers`
+                           as default if not specified, and uses same format and valid values. 
+            certificates:  List of certificate pems (key, cert and bundle-chain) - REQUIRED
+
+        acls:
+          domains:         List of domains to match - optional
+          allow:           Whitelist of IPs (accepts CIDR) - all others denied
+          deny:            Blacklist of IPs (accepts CIDR) - all others allowed
+                           Only one of `allow` or `deny` can be specified
+
+        redirect_to_https: Can either be a string "all", or a key "domains:" with a list of domains to redirect to https
+
+        block_all:         Block all traffic on this listener -- can be used in conjuction with `redirect_to_https` with a list
+                           of domains to redirect them, and drop anything else.
+
+        backend:
+          addresses:       List of addresses to send traffic to.  Can optionally specify the port, does NOT accept CIDR notation.
+          port:            Optional - will use (this).frontend.port by default, and is overridden if the port is specified in the
+                           addresses
+          compress-types:  List of mime-types to compress -- defaults to `compress-types` at the top level.
+

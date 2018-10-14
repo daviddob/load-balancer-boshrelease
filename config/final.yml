@@ -1,0 +1,7 @@
+---
+blobstore:
+  provider: s3
+  options:
+    bucket_name: load-balancer-boshrelease
+
+final_name: load-balancer

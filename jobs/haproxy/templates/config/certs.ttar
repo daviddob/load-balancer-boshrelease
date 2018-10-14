@@ -1,0 +1,47 @@
+<% # vim:ft=eruby
+# Helper function for sub-structs
+def deconstruct(x)
+  return x.map {|a| deconstruct(a)} if x.is_a? Array
+  return x unless x.is_a? OpenStruct
+  h = {}
+  x.to_h.each do |k,v|
+    h[k.to_s] = deconstruct(v)
+  end
+  return h
+end
+
+lbs = deconstruct(p("load-balancers")).each_with_index do |lb,lb_idx|
+  certs = lb.fetch("tls",{}).fetch("certificates",nil)
+  next unless certs
+
+  lb_name = lb["name"]
+  lb_name = "lb#{lb_idx}" unless lb_name && lb_name =~ /^[a-z][-a-z0-9_]*$/
+
+  certs.each_with_index do |cert,c_idx|
+    cert = {"pem" => cert} unless cert.is_a? Hash
+    if cert.has_key?("pem") then
+      if cert.keys.length > 1 then
+        abort("load-balancer #{lb_name} tls.certificates ##{c_idx} can't have any other keys if using 'pem' key")
+      end
+      pem_contents = (cert["pem"]||"").strip.gsub(/ *\r?\n */m, "\n")
+    else # as per https://www.digicert.com/ssl-support/pem-ssl-creation.htm
+      abort("Contents of cert: " + cert.inspect)
+      key=cert.delete("key")
+      crt=cert.delete("crt")
+      chain=cert.delete("chain")
+      abort("load-balancer #{lb_name} tls.certificates ##{c_idx} missing 'key' property") unless key
+      abort("load-balancer #{lb_name} tls.certificates ##{c_idx} missing 'crt' property") unless crt
+      abort("load-balancer #{lb_name} tls.certificates ##{c_idx} invalid properties: #{cert.keys.join(' ')}") \
+        if cert.keys.length > 0
+
+      pem_contents = [key,crt,chain].reject {|e| e.to_s.empty?}.map(&:strip).gsub(/ *\r?\n */m, "\n").join("\n")
+    end
+    next if pem_contents.nil? or pem_contents.empty?
+-%>
+========================== 0600 /var/vcap/jobs/haproxy/config/ssl/<%= lb_name %>/cert-<%= c_idx %>.pem
+<%= pem_contents %>
+<%
+  end
+end
+-%>
+

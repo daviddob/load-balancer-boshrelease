@@ -1,0 +1,45 @@
+#!/bin/bash
+set -eu
+
+RUN_DIR=/var/vcap/sys/run/haproxy
+LOG_DIR=/var/vcap/sys/log/haproxy
+JOB_DIR=/var/vcap/jobs/haproxy
+PIDFILE=$RUN_DIR/haproxy.pid
+mkdir -p $LOG_DIR
+exec >>$LOG_DIR/haproxy.log 2>&1 0<&-
+
+case $1 in
+  start)
+    mkdir -p $RUN_DIR
+
+    if [[ -f $PIDFILE ]]; then
+      PID=$(head -1 $PIDFILE)
+      test -n "$PID" && test -e /proc/$PID && exit 1
+      rm -f $PIDFILE
+    fi
+
+    # Inflate ttar files
+    /var/vcap/packages/ttar/bin/ttar < ${JOB_DIR}/config/certs.ttar 
+    /var/vcap/packages/ttar/bin/ttar < ${JOB_DIR}/config/redir.ttar 
+
+    echo "$(date) starting up haproxy"
+    exec /var/vcap/packages/haproxy/bin/haproxy \
+      -f "${JOB_DIR}/config/haproxy.config" \
+      -p "$PIDFILE" \
+      -D
+    ;;
+
+  stop)
+    # FIXME: safer kill
+    PID=$(head -1 $PIDFILE)
+    kill $PID
+    while [ -e /proc/$PID ]; do sleep 0.1; done
+    rm -f $PIDFILE
+    ;;
+
+  *)
+    echo "Usage: haproxy {start|stop}"
+    exit 1
+    ;;
+esac
+exit 0

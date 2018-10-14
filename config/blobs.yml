@@ -1,0 +1,12 @@
+haproxy/haproxy-1.8.14.tar.gz:
+  size: 2070813
+  sha: 589c6f933d73e8d6ba5307c8304cafb80e968481
+haproxy/lua-5.3.5.tar.gz:
+  size: 303543
+  sha: 112eb10ff04d1b4c9898e121d6bdf54a81482447
+haproxy/pcre2-10.31.tar.gz:
+  size: 2130574
+  sha: 7a77476a908c16cb26ad8a26363b67f00c8303bd
+haproxy/socat-1.7.3.2.tar.gz:
+  size: 615818
+  sha: a2446f65fb9fe9703b85ac5664c8920089fe32d8

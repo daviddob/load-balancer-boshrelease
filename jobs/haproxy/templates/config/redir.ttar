@@ -1,0 +1,27 @@
+<% # vim:ft=eruby
+# Helper function for sub-structs
+def deconstruct(x)
+  return x.map {|a| deconstruct(a)} if x.is_a? Array
+  return x unless x.is_a? OpenStruct
+  h = {}
+  x.to_h.each do |k,v|
+    h[k.to_s] = deconstruct(v)
+  end
+  return h
+end
+
+lbs = deconstruct(p("load-balancers")).each_with_index do |lb,lb_idx|
+  redir = lb["redirect_to_https"]
+  next unless redir && redir.is_a?(Hash)
+  domains = redir.fetch("domains",[])
+  next unless domains && domains.is_a?(Array)
+
+  lb_name = lb["name"]
+  lb_name = "lb#{lb_idx}" unless lb_name && lb_name =~ /^[a-z][-a-z0-9_]*$/
+
+-%>
+========================== 0600 /var/vcap/jobs/haproxy/config/ssl_redirect_<%= lb_name%>.map
+<%= domains.reject {|d| d.nil? || d.empty?}.map {|d| "#{d} true"}.join("\n") %>
+<%
+end
+-%>

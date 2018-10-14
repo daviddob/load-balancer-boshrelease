@@ -172,8 +172,7 @@ instance_groups:
                   1fta47bsMAMHPeVGF9IrLVUP9RMLoNJAG433L69dJowwNjZWiwk7qOSQt+8hb6FP
                   OBKnmt2vPlpfrADwfks/r3fcmyFCY4311CqLV4ZduFPFUhZt0qA/kJ7AzR0=
                   -----END RSA PRIVATE KEY-----
-
-            backend:
-              addresses:
-                - 10.0.0.9:8443
-
+- name:    load-balancer
+  version: 0.0.1
+  url:     https://github.com/genesis-community/load-balancer-boshrelease/releases/download/v0.0.1/load-balancer-0.0.1.tgz
+  sha1:    fa1c103f518afa2d00d5266f2368ac168b5f259b

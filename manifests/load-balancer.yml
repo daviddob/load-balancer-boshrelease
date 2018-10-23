@@ -175,6 +175,6 @@ instance_groups:
 
 releases:
 - name:    load-balancer
-  version: 0.0.1
-  url:     https://github.com/genesis-community/load-balancer-boshrelease/releases/download/v0.0.1/load-balancer-0.0.1.tgz
-  sha1:    fa1c103f518afa2d00d5266f2368ac168b5f259b
+  version: 0.1.0
+  url:     https://github.com/genesis-community/load-balancer-boshrelease/releases/download/v0.1.0/load-balancer-0.1.0.tgz
+  sha1:    9631ddbac1ef3431612a2d11220ab0bc6f0ae813

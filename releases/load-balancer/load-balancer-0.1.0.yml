@@ -1,0 +1,24 @@
+name: load-balancer
+version: 0.1.0
+commit_hash: "0627167"
+uncommitted_changes: false
+jobs:
+- name: haproxy
+  version: d0185387d0d4a0d21f6be57d5860fe1bfa13c2b5
+  fingerprint: d0185387d0d4a0d21f6be57d5860fe1bfa13c2b5
+  sha1: f85d62b28b33fdd1116ec80f1524cf4284c0195a
+packages:
+- name: haproxy
+  version: 886458b7338fa47809d12351fbcfec7e625736d9
+  fingerprint: 886458b7338fa47809d12351fbcfec7e625736d9
+  sha1: bacf664c68bb7b48f53010bfe7a1e24ef74b38c3
+  dependencies: []
+- name: ttar
+  version: 5fa882ed8d91f4efa05dd2444a4985d040bc63c6
+  fingerprint: 5fa882ed8d91f4efa05dd2444a4985d040bc63c6
+  sha1: cb1f31535a62add2109e49d0465b6c4cd0425e54
+  dependencies: []
+license:
+  version: bc026dbd2e576cc5bf2acbd3bfe10f626c3abba8
+  fingerprint: bc026dbd2e576cc5bf2acbd3bfe10f626c3abba8
+  sha1: 089fe83a4f18e1216be71b4caa8b93d0c5f1b2d5

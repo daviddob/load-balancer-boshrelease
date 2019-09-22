@@ -77,10 +77,7 @@ bosh upload-release --rebase
 ######
 ######
 header "Choosing cloud-config options"
-vm_type=$(  bosh int <(bosh cloud-config) --path /vm_types/0/name)
-disk_type=$(bosh int <(bosh cloud-config) --path /disk_types/0/name)
-network=$(  bosh int <(bosh cloud-config) --path /networks/0/name)
-
+network=$(bosh int <(bosh cloud-config) --path /networks/0/name)
 release_name=$(bosh int config/final.yml --path /final_name)
 release_version=$(spruce json dev_releases/*/index.yml | jq -r ".builds[].version" | sed -e "s%+.*%%")
 
@@ -104,21 +101,8 @@ EOF
 for ig in $(spruce json ${MANIFEST_PATH} | jq -r ".instance_groups[].name"); do
   cat <<EOF
 - type: replace
-  path: /instance_groups/name=${ig}/vm_type
-  value: ${vm_type}
-
-- type: replace
   path: /instance_groups/name=${ig}/networks
   value: [{name: ${network}}]
-
-EOF
-done
-
-for ig in $(spruce json $MANIFEST_PATH | jq -r ".instance_groups[] | select(.persistent_disk_type).name"); do
-  cat <<EOF
-- type: replace
-  path: /instance_groups/name=${ig}/persistent_disk_type
-  value: ${disk_type}
 
 EOF
 done) > overrides.yml

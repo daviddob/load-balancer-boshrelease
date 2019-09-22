@@ -25,7 +25,8 @@ instance_groups:
     ephemeral_disk_size: 8192
 
   jobs:
-    - name: haproxy
+    - name:    haproxy
+      release: load-balancer
       properties:
         load-balancers:
           - name: ssh

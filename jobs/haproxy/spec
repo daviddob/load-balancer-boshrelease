@@ -1,92 +1,217 @@
 ---
 name: haproxy
-
-description: "The HAProxy server can be used to terminate SSL in front of the Routers. Each HAProxy instance should point to multiple Routers."
+description: |
+  The HAProxy server can be used to terminate SSL in front of the Routers.
+  Each HAProxy instance should point to multiple Routers..
 
 packages:
-- haproxy
-- ttar
+  - haproxy
+  - ttar
 
 templates:
-  config/haproxy.config:      config/haproxy.config
-  bin/haproxy:                bin/haproxy
-  config/certs.ttar:          config/certs.ttar
-  config/redir.ttar:          config/redir.ttar
+  bin/haproxy:      bin/haproxy
+  etc/haproxy.conf: etc/haproxy.conf
+  etc/certs.ttar:   etc/certs.ttar
+  etc/redir.ttar:   etc/redir.ttar
 
 properties:
-
-  # General
-  config:
+  expert.config:
     description: |
-      ADVANCED: Ignores all other options and provide the haproxy.config file explicitly.
+      (expert mode) Ignore all other options and provide the contnts of the
+      haproxy configuration file explicitly.  You are responsible for
+      getting all of the paths (relative to `/var/vcap`, at a minimum)
+      right.
 
-  processes:
-    description: "Optional number of processes per VM"
+  tuning.processes:
     default: 1
-  syslog-server:
-    description: "An IPv4 address optionally followed by a colon and a UDP port. It can also be an IPv6 address or filesystem path to a UNIX domain socket."
-    default: "/dev/log"
-  log-level:
-    description: "Log level"
-    default: "info"
-  buffer-size-bytes:
-    description: "Buffer size to use for requests, any requests larger than this (large cookies or query strings) will result in a gateway error"
-    default: 16384
-  compress_types:
     description: |
-      List of mime-types to be compressed, such as 'text/html', 'text/plain', and 'text/css'
+      How many worker processes to spin up to handle incoming requests.
+
+      If you configure more than one process, each will get its own
+      `stats` socket, in `/var/vcap/sys/run/haproxy/stats$N`, where `$N`
+      is a unique number starting from 1.
+
+      Otherwise, with `process: 1`, you only get the single `stats` socket,
+      at `/var/vcap/sys/run/haproxy/stats.sock`.
+
+  tuning.buffers:
+    default: 16K
+    description: |
+      Buffer size to use for requests, any requests larger than this (large
+      cookies or query strings) will result in an HTTP 5xx Gateway Error.
+
+      Can be specified in bytes (with a suffix of 'b', or no suffix at all),
+      kiobytes (i.e. `16k`) or megabytes (i.e. `4M`).
+
+  logging.destination:
+    default: /dev/log
+    example: syslog.example.com:514
+    description: |
+      Where to send haproxy log output.  By default, this will be sent
+      to the local host's syslog process, via `/dev/log`, but you can set
+      haproxy up to log remotely by setting a host/ip and port.
+
+  logging.facility:
+    default: daemon
+    description: |
+      What syslog facility to log haproxy messages as.  Must be a valid
+      facility name, per haproxy (and to a lesser extent, RFC-5424).
+
+      Valid values are:
+        kern   user   mail   daemon auth   syslog lpr    news
+        uucp   cron   auth2  ftp    ntp    audit  alert  cron2
+        local0 local1 local2 local3 local4 local5 local6 local7
+
+  logging.level:
+    default: info
+    description: |
+      How verbose do you want the haproxy server logs to be?
+
+      Must be a log level name known to haproxy; one of:
+        emerg  alert  crit   err    warning notice info  debug
+
+  compress-types:
     default: []
+    description: |
+      List of MIME types to enable automatic front-end response compression,
+      i.e.: 'text/html', 'text/plain', and 'text/css'.
 
-  # Timeouts
   timeouts.connect:
-    description: "Timeout (in floating point seconds) used on connections from haproxy to a backend, while waiting for the TCP handshake to complete + connection to establish"
-    default:     5
-  timeouts.client:
-    description: "Timeout (in floating point seconds) used on connections from a client to haproxy that have gone inactive"
-    default:     30
-  timeouts.server:
-    description: "Timeout (in floating point seconds) used on connections from haproxy to a backend, while waiting for data from the backend"
-    default:     30
-  timeouts.websocket:
-    description: "Timeout (in floating point seconds) used on websocket/tunnel traffic, when both ends of the conversation have become inactive"
-    default:     3600
-  timeouts.keepalive:
-    description: "Timeout (in floating point seconds) applied to any connection that is in an http-keepalive state, waiting for the next request to occur"
-    default:     0.5
-  timeouts.request:
-    description: "Timeout (in floating point seconds) applied to any connection to limit the maximum time for a complete HTTP request (headers only). Used to limit DoS attacks that send data slowly to not trigger the client/server timeouts"
-    default:     5
-  timeouts.queue:
-    description: "Timeout (in floating point seconds) used on any connection sitting in the pending queue, waiting to be sent to the backend, to limit its time being queued"
-    default:     30
+    default:     5s
+    description: |
+      How long to allow TCP connections made by haproxy to a load-balanced
+      backend, before giving up.  This timeout stops being relevant once the
+      TCP three-way handshake (SYN - SYN/ACK - ACK) is completed, but before
+      any meaningful HTTP protocol data has been sent.
 
-  # TLS
-  tls.default-protocols:
+  timeouts.client:
+    default:     30s
     description: |
-      The default allowed protocols to use.  Valid array values are one or more of the following:
-      "ssl v3", "tls v1.0",  "tls v1.1",  "tls v1.2",  "tls tickets"
-    default: ["tls v1.2"]
-  tls.default-ciphers:
+      How long to allow connections from clients to the haproxy front door
+      to idle (i.e. no HTTP traffic) before closing them.
+
+  timeouts.server:
+    default:     30s
     description: |
-      Colon-separated string of TLS ciphers that are passed to HAProxy
-    default: ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS
-  tls.default-dh-param:
+      How long to allow connections from haproxy to backend servers to idle
+      (i.e. no HTTP traffic) before closing them.
+
+  timeouts.websocket:
+    default:     1h
     description: |
-      Maximum size of DH params when generating epmehmeral keys during key exchange
+      How long to allow an upgraded HTTP WebSocket channel to idle without
+      sending any data (including WS ping/pong messages) before closing both
+      ends of the connection.
+
+  timeouts.keepalive:
+    default:     0.5s
+    description: |
+      How long to allow an HTTP connection with `Connection: keepalive` to
+      idle (without sending any packets) before it is closed.
+
+  timeouts.request:
+    default:     5s
+    description: |
+      How long to allow clients to transmit the headers of their HTTP
+      request.
+
+      Most clients will try to be quick about it, hence the high default
+      value of 5 seconds.  This setting is aimed primarily at ensuring that
+      malicious clients cannot mount a denial-of-service attack against the
+      haproxy by quickly setting up the TCP connection and then delay
+      sending the full request.
+
+  timeouts.queue:
+    default:     30s
+    description: |
+      How long to allow a client connection to sit in the "pending" queue,
+      waiting to be connected with a backend, before closing it.
+
+  tls.protocols:
+    default: [tlsv1.2]
+    description: |
+      Which TLS protocols to allow clients to speak to the haproxy server.
+      Precisely which of these is used on any given connection is negotiated
+      by the client and haproxy, but will be limited to this set.
+
+      The following values are recognized:
+
+          sslv3   tlsv1.0  tlsv1.1  tlsv1.2  tls-tickets
+
+      This must be specified as a YAML list, i.e.:
+
+          tls:
+            protocols:
+              - tlsv1.1
+              - tlsv1.2
+
+  tls.ciphers:
+    description: |
+      Allowed TLS ciphers, for encryption of traffic and key exchange.
+      Precisely which of these is used on any given connection is negotiated
+      by the client and haproxy, but will be limited to this set.
+
+      This must be specified as a YAML list, i.e.:
+
+          tls:
+            ciphers:
+              - ECDHE-RSA-DES-CBC3-SHA
+              - ECDHE-ECDSA-DES-CBC3-SHA
+              # etc.
+
+    default:
+      - ECDHE-ECDSA-CHACHA20-POLY1305
+      - ECDHE-RSA-CHACHA20-POLY1305
+      - ECDHE-ECDSA-AES128-GCM-SHA256
+      - ECDHE-RSA-AES128-GCM-SHA256
+      - ECDHE-ECDSA-AES256-GCM-SHA384
+      - ECDHE-RSA-AES256-GCM-SHA384
+      - DHE-RSA-AES128-GCM-SHA256
+      - DHE-RSA-AES256-GCM-SHA384
+      - ECDHE-ECDSA-AES128-SHA256
+      - ECDHE-RSA-AES128-SHA256
+      - ECDHE-ECDSA-AES128-SHA
+      - ECDHE-RSA-AES256-SHA384
+      - ECDHE-RSA-AES128-SHA
+      - ECDHE-ECDSA-AES256-SHA384
+      - ECDHE-ECDSA-AES256-SHA
+      - ECDHE-RSA-AES256-SHA
+      - DHE-RSA-AES128-SHA256
+      - DHE-RSA-AES128-SHA
+      - DHE-RSA-AES256-SHA256
+      - DHE-RSA-AES256-SHA
+      - ECDHE-ECDSA-DES-CBC3-SHA
+      - ECDHE-RSA-DES-CBC3-SHA
+      - EDH-RSA-DES-CBC3-SHA
+      - AES128-GCM-SHA256
+      - AES256-GCM-SHA384
+      - AES128-SHA256
+      - AES256-SHA256
+      - AES128-SHA
+      - AES256-SHA
+      - DES-CBC3-SHA
+      - !DSS
+
+  tls.dh-params-max-bits:
     default: 2048
+    description: |
+      Maximum size of DH params (in bits) for generating epmehmeral keys
+      during key exchange.  Can be either 1024 (not recommended), 2048 (the
+      default), or 4096.
 
   load-balancers:
     description: |-
-      Specify a list of load balancers to provide.  Each array element is composed of the following properties:
+      A list of load balancer definitions.  Each item in the list must be an
+      object with the following properties:
 
         frontend:
           accept_proxy:    true|false
           mode:            Treat contents at level 7 (http) or level 4 (tcp) -- defaults to tcp
           port:            Port to bind to - defaults to 443 if <this>.tls.certificates is specified, 80 otherwise
           tls:
-            protocols:     List of allowed protocols -- defaults to `tls.default-protocols` if not specified, and uses the
+            protocols:     List of allowed protocols -- defaults to `tls.protocols` if not specified, and uses the
                            same valid values.
-            ciphers:       Colon-separated string of TLS ciphers allowed for this load balancer -- uses `tls.default-ciphers`
+            ciphers:       Colon-separated string of TLS ciphers allowed for this load balancer -- uses `tls.ciphers`
                            as default if not specified, and uses same format and valid values. 
             certificates:  List of certificate pems (key, cert and bundle-chain) - REQUIRED
 
@@ -106,4 +231,3 @@ properties:
           port:            Optional - will use (this).frontend.port by default, and is overridden if the port is specified in the
                            addresses
           compress-types:  List of mime-types to compress -- defaults to `compress-types` at the top level.
-

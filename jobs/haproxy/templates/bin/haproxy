@@ -19,12 +19,12 @@ case $1 in
     fi
 
     # Inflate ttar files
-    /var/vcap/packages/ttar/bin/ttar < ${JOB_DIR}/config/certs.ttar 
-    /var/vcap/packages/ttar/bin/ttar < ${JOB_DIR}/config/redir.ttar 
+    /var/vcap/packages/ttar/bin/ttar < ${JOB_DIR}/etc/certs.ttar
+    /var/vcap/packages/ttar/bin/ttar < ${JOB_DIR}/etc/redir.ttar
 
     echo "$(date) starting up haproxy"
     exec /var/vcap/packages/haproxy/bin/haproxy \
-      -f "${JOB_DIR}/config/haproxy.config" \
+      -f "${JOB_DIR}/etc/haproxy.conf" \
       -p "$PIDFILE" \
       -D
     ;;

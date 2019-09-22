@@ -16,19 +16,17 @@ instance_groups:
 - name: haproxy
   instances: 1
   azs:       [z1]
-  vm_type:              default
-  stemcell:             default
-  persistent_disk: 1_024
+  networks:  [{name: default }]
 
-  networks:
-    - name: default
+  stemcell: default
+  vm_resources:
+    cpu: 2
+    ram: 4096
+    ephemeral_disk_size: 8192
 
   jobs:
     - name: haproxy
       properties:
-        advanced: |
-          # this goes into haproxy config verbatim
-
         load-balancers:
           - name: ssh
             mode: tcp
@@ -175,6 +173,6 @@ instance_groups:
 
 releases:
 - name:    load-balancer
-  version: 0.1.0
-  url:     https://github.com/genesis-community/load-balancer-boshrelease/releases/download/v0.1.0/load-balancer-0.1.0.tgz
-  sha1:    9631ddbac1ef3431612a2d11220ab0bc6f0ae813
+  version: latest
+  #url:     https://github.com/genesis-community/load-balancer-boshrelease/releases/download/v0.1.0/load-balancer-0.1.0.tgz
+  #sha1:    9631ddbac1ef3431612a2d11220ab0bc6f0ae813

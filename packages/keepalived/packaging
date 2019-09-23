@@ -1,0 +1,17 @@
+#!/bin/bash
+set -eux
+
+version=2.0.18
+CPUS=$(grep ^processor /proc/cpuinfo | wc -l)
+
+mkdir -p $BOSH_INSTALL_TARGET/bin
+cp -a keepalived/detect-iface $BOSH_INSTALL_TARGET/bin
+chmod 0755 $BOSH_INSTALL_TARGET/bin/detect-iface
+
+# from http://www.keepalived.org/software/
+tar -xzf keepalived/keepalived-$version.tar.gz
+pushd keepalived-$version/
+  ./configure --prefix=$BOSH_INSTALL_TARGET
+  make -j$CPUS
+  make install
+popd

@@ -1,0 +1,4 @@
+---
+name: keepalived
+files:
+- keepalived/*

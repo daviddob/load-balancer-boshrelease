@@ -1,0 +1,51 @@
+---
+name: keepalived
+description: |
+  Keepalived implements the Virtual Routing Resource Protocol (VRRP),
+  enabling a single virtual IP (a VIP) to be managed between multiple hosts.
+  This in turn allows two or more haproxy servers to present as a single,
+  unified endpoint.
+
+packages:
+  - keepalived
+
+templates:
+  bin/keepalived:          bin/keepalived
+  etc/keepalived.conf.tpl: etc/keepalived.conf.tpl
+
+properties:
+  id:
+    default: 1
+    description: |
+      A numeric ID, ranging from 1 to 255 inclusively, for the VRRP router
+      group.  Each instance that is configured with the same `id` will
+      consider itself a member of the virtual router group, and actively
+      solicit control of the VIP.
+
+      If you run multiple deployments of this BOSH release, you will need to
+      ensure that you choose unique, non-coincidental VRRP IDs.
+
+  interface:
+    default: auto
+    description: |
+      What Linux kernel interface to use for bringing up the VRRP VIP.
+
+  vip:
+    description: |
+      An unused IPv4 address, to be used as the virtual IP address of the
+      VRRP cluster.  This interface will be managed between all instances of
+      this instance group, such that only one host responds to ARP requests.
+
+  check:
+    default: killall -0 haproxy
+    description: |
+      A command to run (possible with arguments) to determine if the local
+      node is healthy enough to continue controlling the VIP.  By default,
+      this checks for the existence of the `haproxy` process, since it is
+      expected that this job is co-located with that one.
+
+  ignore-interface-faults:
+    default: true
+    description: |
+      Ignore faults on the VRRP interface.  Only disable this if you know
+      what you are doing and why you are doing it.

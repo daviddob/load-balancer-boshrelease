@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# usage: detect-iface ip.ad.dre.ss
+open my $fh, "-|", "ip route show scope link"
+  or die "Failed to exec `ip route': $!\n";
+
+my $ip = unpack('N', pack("C4", split /\./, $ARGV[0]));
+
+while (<$fh>) {
+  next unless m{^(.*?)/(\d+)\s+\S+\s+(\S+)};
+  my ($net, $mask, $iface) = ($1, $2, $3);
+  $mask = ~((2 ** (32 - $mask)) - 1);
+  $net = unpack('N', pack("C4", split /\./, $net)) & $mask;
+  next unless $net == ($ip & $mask);
+
+  print "$iface\n";
+  close $fh;
+  exit 0;
+}
+
+close $fh;
+exit 1;

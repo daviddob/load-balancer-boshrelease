@@ -1,0 +1,59 @@
+#!/bin/bash
+set -eu
+
+RUN_DIR=/var/vcap/sys/run/keepalived
+LOG_DIR=/var/vcap/sys/log/keepalived
+JOB_DIR=/var/vcap/jobs/keepalived
+PIDFILE=$RUN_DIR/keepalived.pid
+mkdir -p $LOG_DIR
+exec >>$LOG_DIR/keepalived.log 2>&1 0<&-
+
+case $1 in
+  start)
+    mkdir -p $RUN_DIR
+
+    if [[ -f $PIDFILE ]]; then
+      PID=$(head -1 $PIDFILE)
+      test -n "$PID" && test -e /proc/$PID && exit 1
+      rm -f $PIDFILE
+    fi
+
+    echo "$(date) keepalived/$$: starting up keepalived"
+    <% if p('interface') == "auto" -%>
+    iface=$(/var/vcap/packages/keepalived/bin/detect-iface <%= p('vip') %>)
+    if [[ -z "$iface" ]]; then
+      echo "$(date) keepalived/$$: UNABLE to determine what interface to use for '<%= p('vip') %>'"
+      echo "$(date) keepalived/$$: BAILING OUT!"
+      exit 1
+    fi
+    sed -e "s/interface auto/interface $iface/g" \
+        $JOB_DIR/etc/keepalived.conf.tpl \
+      > $JOB_DIR/etc/keepalived.conf
+    <% else -%>
+    cp $JOB_DIR/etc/keepalived.conf.tpl \
+       $JOB_DIR/etc/keepalived.conf
+    <% end %>
+
+    exec /var/vcap/packages/keepalived/sbin/keepalived \
+        -l -D -n \
+        -f $JOB_DIR/etc/keepalived.conf \
+        --pid=$RUN_DIR/keepalived.pid \
+        --vrrp_pid=$RUN_DIR/vrrp.pid \
+        --checkers_pid=$RUN_DIR/checkers.pid
+    ;;
+
+  stop)
+    echo "$(date) keepalived/$$: stopping up keepalived"
+    # FIXME: safer kill
+    PID=$(head -1 $PIDFILE)
+    kill $PID
+    while [ -e /proc/$PID ]; do sleep 0.1; done
+    rm -f $PIDFILE
+    ;;
+
+  *)
+    echo "Usage: keepalived {start|stop}"
+    exit 1
+    ;;
+esac
+exit 0

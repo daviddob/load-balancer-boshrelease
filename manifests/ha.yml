@@ -1,0 +1,185 @@
+name: load-balancer-ha
+
+update:
+  canaries: 0
+  max_in_flight: 1
+  serial: true
+  canary_watch_time: 1000-120000
+  update_watch_time: 1000-120000
+
+stemcells:
+- alias: default
+  os: ubuntu-xenial
+  version: latest
+
+instance_groups:
+- name: haproxy
+  instances: 1
+  azs:       [z1]
+  networks:  [{name: default }]
+
+  stemcell: default
+  vm_resources:
+    cpu: 2
+    ram: 4096
+    ephemeral_disk_size: 8192
+
+  jobs:
+    - name:    keepalived
+      release: load-balancer
+      properties:
+        vip: 10.128.254.254
+        id:  254
+
+    - name:    haproxy
+      release: load-balancer
+      properties:
+        load-balancers:
+          - name: ssh
+            mode: tcp
+            port: 2222
+
+            acls:
+              - name: internal-only
+                allow:
+                  - 10.0.0.0/8
+
+            backend:
+              addresses:
+                - 10.0.0.9
+              port: 2222
+
+          - name: http
+            mode: http
+            port: 80
+
+            acls:
+              - name: internal-only
+                domains:
+                  - system.dev.cf.test.io
+                  - run.dev.cf.test.io
+                allow:
+                  - 10.0.0.0/8
+                  - 192.168.17.78
+              - name: f-this-guy
+                deny:
+                  - 50.206.241.78/32
+
+            redirect_to_https:
+              domains:
+                - admin.test-domain.com
+                - admin.junk-domain.com
+
+            backend:
+              addresses:
+                - 10.0.0.9
+              port: 8443
+
+          - name: https
+            mode: http
+            port: 443
+
+            acls:
+              - name: internal-only
+                domains:
+                  - system.dev.cf.test.io
+                  - run.dev.cf.test.io
+                allow:
+                  - 10.0.0.0/8
+                  - 192.168.17.78
+              - name: f-this-guy
+                deny:
+                  - 50.206.241.78/32
+
+            backend:
+              addresses:
+                - 10.0.0.9:8443
+
+            tls:
+              certificates:
+                - |
+                  -----BEGIN CERTIFICATE-----
+                  MIIE2TCCAsGgAwIBAgIBATANBgkqhkiG9w0BAQ0FADAeMRwwGgYDVQQDExNydWJp
+                  ZGl1bXN0dWRpb3MuY29tMB4XDTE4MTAwODIwMDQzNVoXDTE4MTAwOTIwMDQzNVow
+                  HjEcMBoGA1UEAxMTcnViaWRpdW1zdHVkaW9zLmNvbTCCAiIwDQYJKoZIhvcNAQEB
+                  BQADggIPADCCAgoCggIBAM562fNKNHpvBWr4fOw9v6U+Jy7F6j2FP/i0OugAK8T4
+                  Q69ZOm7prq8ai29Dj80qibsc2eTYqDdBcR+6L1QmM9GJB2mTdk97zLJdXKZQDKfI
+                  Ra42E22lz07M5NE7Fn8UtqIUEQhmBQKkuWChlbDVtyrCj19XtYx0IPLemWkbn1qI
+                  fAPVXuIgjHFIG7WI7iHrqh6cRNP1Oa4k1IvbOiuwkp8oL+1lfrA+Vyp8SFNpaK1i
+                  pllnXnFOM8CSOQ/cV5RUhDs8w90QxQNvt8pN9PV3Slw3HkKFHhpGCcB3ZZq195m+
+                  4TXm5NGhlcfsLtLUfUWS2ptKxea5j0Q2D8oNv8mIGjpisungJsauTPE+5sttP2IH
+                  4IVoYPRK7aoiVzUfpoA65+3356Tv3hAKg6Zyx+YAFea4B6rok5umGiGtUkRuddYM
+                  SGZsupxGuo/gwtC1u/GUGmdLYNksDD9rq3/QCdwMGOw25gOmmpIxzbuq2VGQbIHy
+                  KZXlCKV1Dc2t7lglBSdz2YakSDb5YAA5rjs03eJyfkMO9heRfAIrm/Ht1dzRdP03
+                  gQVdSb0aQ5tUtb+cgVjpTHzq/qrlraOrt3xILevmIqJFHag7sK6My065Gyl0JYJW
+                  YDKrufSWB7WtyYJzNm+jYCl1pZBpZfRFsKXNiYEMrWl7WjnjueveDW3oFERXSKMh
+                  AgMBAAGjIjAgMB4GA1UdEQQXMBWCE3J1YmlkaXVtc3R1ZGlvcy5jb20wDQYJKoZI
+                  hvcNAQENBQADggIBAEVUqbKgEr0H3lnP7GSr617JkjU2cgPXIf8GkvqnKzFdYeF0
+                  OIy9k7GFBYBUuYC80oEgI9JWLWJn0s8dxfs9TJlFfMOmSDKaqSDyWUWuCU26NFAt
+                  YRIgMXT3QgEWhaeDJsLz0AyRZiyngzMibxPSSYCr4KOY0SjDnoCZR7BqyLJ6cJZa
+                  +hXNnta7KwHTzw/TyItoGHN10MxBhvVXcBjX3Ug4KKV1DiTN2JGHpfdVHUjvUcTh
+                  /ZBNrgtWcKckIMQVm+S0rnRXVPfs5zS6OsQtfPCXKhRzI0QK/dNyG1Dtrgu5U3S3
+                  yVBHyq0ZeKeDYuUX5DVL5sfDypJjdJNkaBNIaXdJeHiCSRx5OQcF23ICb5RNmE/I
+                  flj0SRc7lceEb+eS2SMN6fZz3jDNGDNK9l2KglL5Trj3ItW8SxcSgYxd2idNEIIA
+                  nP6mbClNOME1EzrfJyP5TKx20l9yFwyZ7DY6tSfeAgb0BRv2btYzue1YiQycOQZv
+                  YaCXOtkC+Ut2iZ4pc957cgTlRmlHxtPN8cb1o+3I/ZGMMR48kjUM1DO6zNyu5PEL
+                  ijaB/RrSmIrZad16GGsMol8B6JcLftwVF7R1T8hPMjycnkS4cd9IAVZDJsC6aPLd
+                  bPDRAOl4+XLjUPvOU1pA33mLT+KXdhbUZ2Er523pvoixwovS61SnBS+IMlaV
+                  -----END CERTIFICATE-----
+                  -----BEGIN RSA PRIVATE KEY-----
+                  MIIJKAIBAAKCAgEAznrZ80o0em8Favh87D2/pT4nLsXqPYU/+LQ66AArxPhDr1k6
+                  bumurxqLb0OPzSqJuxzZ5NioN0FxH7ovVCYz0YkHaZN2T3vMsl1cplAMp8hFrjYT
+                  baXPTszk0TsWfxS2ohQRCGYFAqS5YKGVsNW3KsKPX1e1jHQg8t6ZaRufWoh8A9Ve
+                  4iCMcUgbtYjuIeuqHpxE0/U5riTUi9s6K7CSnygv7WV+sD5XKnxIU2lorWKmWWde
+                  cU4zwJI5D9xXlFSEOzzD3RDFA2+3yk309XdKXDceQoUeGkYJwHdlmrX3mb7hNebk
+                  0aGVx+wu0tR9RZLam0rF5rmPRDYPyg2/yYgaOmKy6eAmxq5M8T7my20/YgfghWhg
+                  9ErtqiJXNR+mgDrn7ffnpO/eEAqDpnLH5gAV5rgHquiTm6YaIa1SRG511gxIZmy6
+                  nEa6j+DC0LW78ZQaZ0tg2SwMP2urf9AJ3AwY7DbmA6aakjHNu6rZUZBsgfIpleUI
+                  pXUNza3uWCUFJ3PZhqRINvlgADmuOzTd4nJ+Qw72F5F8Aiub8e3V3NF0/TeBBV1J
+                  vRpDm1S1v5yBWOlMfOr+quWto6u3fEgt6+YiokUdqDuwrozLTrkbKXQlglZgMqu5
+                  9JYHta3JgnM2b6NgKXWlkGll9EWwpc2JgQytaXtaOeO5694NbegURFdIoyECAwEA
+                  AQKCAgB0vRaOq8yh0DUy9ozCkGLTDSHgGvvFjpnNhjCrzLTyZx71e7BC1xHxZEOj
+                  Q4KBD+TRCo3TCf+JRhGsS3rIy9SOSjgLo9jHNYpU6d4hFa8iCWQEDATOAGoF9mgE
+                  N7EPZmmfl1LN+cgpZ3J7xL+6PAqUPW4MDK3TXDDov5vixkBBUlszW6aKmLZuscMg
+                  zus7+F61ccqkP8g9wgr9i5QG8YzkOTdns/N9t7FWju/hYP5S0SyV7ZCC5SDzZnim
+                  lABcF7CvQTrHuNx6heZWld7CDZDYND2ChHqxhhmrXJXwc6MqpLX14LZMI1xorQsI
+                  HiU5eb7o/8yGFzF98kbZCQ7+5VlV1hDVVhn2/ZIXl+0yVIQtdQ9v1T7Lo+h6FtzI
+                  qTepeWfk1WaS93A9yZWHkrWlAFfw6B0oJ7DUsFN740zlMIKInNM1LopU+UQg9cjX
+                  SMRoa1xcgAzTfWWa4bv/JZrhoSsYb+0w++VhN3StgoboSZARIqmtjAdWA4jW6VgJ
+                  elcw26wED+s59Ncbe+Z3PPlQ9hAKNXeeLPJaY7hhCjmIvjlwtJS8kiCk0OFprokz
+                  UpYmAn0krDcHBbpD5A5khB4nrlSdUss2lj58uW55MP4i207EVZcdFr3GV7CJVt8T
+                  EqABpcG8RQ3GjgJzaFupKC218j+NXUzurWHD6bANwhrCi+m3NQKCAQEA0HiaKH5G
+                  KaHWLA+zkCiK7WYRdZBfFA+wyTFD/KlqBzRF2oswreqdDvYYwYR4Y3/K97WPVwZQ
+                  2c1wA6ym1Pq+q2xc7uXlU8CQgAmdTJcGW41lnSAC9/YA1Sn4zTHyvzBc4gz31i8r
+                  R1o9kYBBAa3XKtOnhASEzugVJx46vFoBiR13kI68Q4VT4QG+sGYimn/bpxZ2hEuX
+                  +DPk8FD5WiihTiOCnZLcw//5xmIVSR0EiBuUL4AfTX82AWCnoNJso47lpeK42+lq
+                  YlXwb7buUyMmf8xK+G7+K/RQxRLmGsl6smUHbOgbKuMi+A1rdwgSQrcwhPcVWlqU
+                  26TEoTw2HzpiDwKCAQEA/Y4IOu843jOrGVRIbdt8Kkz8QkAYZB0L501ePK5Yw1S2
+                  FSvP5FNL5ICTxxLcGAtIn/4z4ekt9zJOlPZ7euAydZEtgo9fRP4rR0IWu+xfxVLa
+                  sncsJnDgB1hPGWFkcIiDbVJ5C5CurI+T9vOwm9eDl7E9Rm5W8qpwppoKCInoTZ/S
+                  1LEHzI6KXGCaiLvU0uUYJFbMY05yL+e5ZpnyjNGQwjAlIfA+CJPa0Xu7UstjKt8L
+                  AW30gLPYH9F4AdOQQL6BjApHcnsIR2034E9YlgCV6bg1EY96j11VlsM2khg8ionM
+                  EtOxpPN3YHNNqBog0iVDBeOaMfFOBIQtQjmkF3wXzwKCAQB32j5WtXJFESP+pPBJ
+                  GuX0Yk/7VQs0j2jF4qsBoayxg539bTSJaG7vYREOgMht+9SG4T0NfTYSYgfaNPKd
+                  U6M3Ds/HESjtI7JvyhdDJziifgJDeVn7kNUduEmwPt0eigF8fJQn8WpiVUE8W44E
+                  FxuzJYgTYD2ybr9qg/ikvOJRID3TQByAfTCiFcy5wZ53ULbJsyJkIMm4Cq2+c+9H
+                  pEBImiXHzd1aWdoR8eXm6OXoEmL5hCF6/n3gAN+emBuZVNg2rMg2tlVRP7NBptwR
+                  tA24P42Ckt1SC947zwe3ssn1shu4wyCLYZaDIcP85QkKjiM47oy6K4WVWX8qa2F6
+                  RqiFAoIBAHucWKrSoTjCm7FXg4/7JsdAjOKHeNylxH3ZHA4dOSzRCYu8tjcr3J3j
+                  iSfOK/qU1a0aMpT6JuySW/kHSR+YWUEzq6ow11M9TkAJGig3jmEWiYPj0WRUNwOd
+                  q8JF1r997gTH5jcbK+z4ejw0hW8UXBUB1UuW01CugwjVo/qRsOzW8+O5AoJZI17x
+                  waTTXWgLQ//DSRVI0yZDpAE/IB5CtH3XFuM6yiNIYa8q0SIGAayO3ECwKDjudHje
+                  l9DcIUFPHrz07ewDyv93YXw7coZ+dpdgtI6BElD+QZGkTeBfbHRlxVWQWtR91T7y
+                  N3OyeTm57LjcQvoCF/Tfs2jLzRGd78UCggEBAKfIHwBlDTbBJtpcxYl2vk6QaKge
+                  3nBrk/k4kJkcYwHFvZulribwTUcSOnl5MF19cp2pBpr445OJfQqvYJ/9YW9VRgrW
+                  8/wdrukX70BgM5nCXPcCiOCOjQrnkk74HIJVk43ntUfaq8Hn+LoSpdzM/jFiWybJ
+                  hoIFBqkzhbVAdJxScHl3wJSSAuKjHzXECdhnSIbDb5XrZDUwTK3JLKlcuJEuBoOZ
+                  1fta47bsMAMHPeVGF9IrLVUP9RMLoNJAG433L69dJowwNjZWiwk7qOSQt+8hb6FP
+                  OBKnmt2vPlpfrADwfks/r3fcmyFCY4311CqLV4ZduFPFUhZt0qA/kJ7AzR0=
+                  -----END RSA PRIVATE KEY-----
+
+releases:
+- name:    load-balancer
+  version: latest
+  url:     https://github.com/genesis-community/load-balancer-boshrelease/releases/download/v0.1.0/load-balancer-0.1.0.tgz
+  sha1:    9631ddbac1ef3431612a2d11220ab0bc6f0ae813

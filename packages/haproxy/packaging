@@ -1,6 +1,5 @@
 #!/bin/bash
-# abort script on any command that exit with a non zero value
-set -e
+set -eu
 
 LUA_VERSION=5.3.5
 PCRE_VERSION=10.32

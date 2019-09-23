@@ -1,0 +1,12 @@
+---
+name: python-debs
+files:
+  # xenial
+  - python-xenial-debs/libpython-stdlib_2.7.12-1~16.04_amd64.deb
+  - python-xenial-debs/libpython2.7-minimal_2.7.12-1ubuntu0~16.04.8_amd64.deb
+  - python-xenial-debs/libpython2.7-stdlib_2.7.12-1ubuntu0~16.04.8_amd64.deb
+  - python-xenial-debs/mime-support_3.59ubuntu1_all.deb
+  - python-xenial-debs/python-minimal_2.7.12-1~16.04_amd64.deb
+  - python-xenial-debs/python2.7-minimal_2.7.12-1ubuntu0~16.04.8_amd64.deb
+  - python-xenial-debs/python2.7_2.7.12-1ubuntu0~16.04.8_amd64.deb
+  - python-xenial-debs/python_2.7.12-1~16.04_amd64.deb

@@ -1,0 +1,34 @@
+#!/bin/bash
+set -eu
+exec 2>&1
+echo "[$(date)] pre-start script starting up"
+
+inst() {
+  echo " - checking for $2 ..."
+  dpkg -s $2 >/dev/null || dpkg --force-confdef -i /var/vcap/packages/python-debs/python-$1-debs/$3
+}
+
+codename=$(lsb_release -sc)
+case "$codename" in
+xenial)
+  echo "$(date) installing Python packages"
+  (
+    flock -x 200
+    inst $codename mime-support           mime-support_3.59ubuntu1_all.deb
+    inst $codename libpython2.7-minimal   libpython2.7-minimal_2.7.12-1ubuntu0~16.04.8_amd64.deb
+    inst $codename python2.7-minimal      python2.7-minimal_2.7.12-1ubuntu0~16.04.8_amd64.deb
+    inst $codename python-minimal         python-minimal_2.7.12-1~16.04_amd64.deb
+    inst $codename libpython2.7-stdlib    libpython2.7-stdlib_2.7.12-1ubuntu0~16.04.8_amd64.deb
+    inst $codename libpython-stdlib       libpython-stdlib_2.7.12-1~16.04_amd64.deb
+    inst $codename python2.7              python2.7_2.7.12-1ubuntu0~16.04.8_amd64.deb
+    inst $codename python                 python_2.7.12-1~16.04_amd64.deb
+  ) 200>/var/vcap/data/dpkg.lock
+  ;;
+*)
+  echo "This version of the BOSH Stemcell ($codename) is not supported!"
+  lsb_release --all | sed -e 's/^/  /'
+  exit 1
+  ;;
+esac
+
+echo "[$(date)] DONE"

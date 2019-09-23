@@ -22,3 +22,35 @@ keepalived/keepalived-2.0.18.tar.gz:
   size: 1015958
   object_id: d6f4b7ed-ff5b-4808-5a19-535691a8db96
   sha: 86cf8c2ec6df72daa705d2fd59502ca39e8244c9
+python-xenial-debs/libpython-stdlib_2.7.12-1~16.04_amd64.deb:
+  size: 7768
+  object_id: 89dbc29b-7c1a-4522-78b9-3084935fdb12
+  sha: 6fdbea3f1eab0e19184d2cdc80c4a3aa7a463065
+python-xenial-debs/libpython2.7-minimal_2.7.12-1ubuntu0~16.04.8_amd64.deb:
+  size: 339478
+  object_id: 92cbae44-9200-4520-6fa2-26136c2ae675
+  sha: 3067d4139756915d2a67e80041696415a31d9c20
+python-xenial-debs/libpython2.7-stdlib_2.7.12-1ubuntu0~16.04.8_amd64.deb:
+  size: 1884528
+  object_id: 974bc6fd-7250-4f35-4e3d-5cce07431ef2
+  sha: 032fcfc1816405c38fa4cd51c9477d5c2934bd6d
+python-xenial-debs/mime-support_3.59ubuntu1_all.deb:
+  size: 31022
+  object_id: c6931c4e-9d0d-4893-64d8-e09d5b533d3f
+  sha: 7f18e9594ba0658cf92a2e60f44af1e06564e0aa
+python-xenial-debs/python-minimal_2.7.12-1~16.04_amd64.deb:
+  size: 28122
+  object_id: a058f3da-c836-48f2-5539-2b86a3684827
+  sha: 51d5619c329a875d3f3fb6964d38ca070a253c15
+python-xenial-debs/python_2.7.12-1~16.04_amd64.deb:
+  size: 136856
+  object_id: 42f855f0-5a09-43c2-685b-c90065ddd149
+  sha: 310cf9be4257d0964076fab4139facc398196c11
+python-xenial-debs/python2.7-minimal_2.7.12-1ubuntu0~16.04.8_amd64.deb:
+  size: 1261176
+  object_id: ab535a8a-738b-460f-7973-7de6a0c4f048
+  sha: 74fb2eb7e06b6e8cb0e6812a0b241a8b9b762e14
+python-xenial-debs/python2.7_2.7.12-1ubuntu0~16.04.8_amd64.deb:
+  size: 223624
+  object_id: c4ff2af5-9b82-4dea-70b1-9a3dfc1b4df5
+  sha: d56490963cef41cc4e0f4387dbc9651d24928ee6

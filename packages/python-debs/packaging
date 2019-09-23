@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eu
+
+cp -a ${BOSH_COMPILE_TARGET}/python-*-debs ${BOSH_INSTALL_TARGET}/

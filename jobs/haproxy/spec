@@ -6,6 +6,7 @@ description: |
 
 packages:
   - haproxy
+  - python-debs
   - ttar
 
 templates:
@@ -13,6 +14,8 @@ templates:
   etc/haproxy.conf: etc/haproxy.conf
   etc/certs.ttar:   etc/certs.ttar
   etc/redir.ttar:   etc/redir.ttar
+
+  bin/pre-start:    bin/pre-start
 
 properties:
   expert.config:

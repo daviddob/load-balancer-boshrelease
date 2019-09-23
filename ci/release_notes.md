@@ -1,9 +1,12 @@
 # Improvements
 
-- This BOSH release now ships with an oprtional `keepalived` job,
+- This BOSH release now ships with an optional `keepalived` job,
   for running VRRP virtual router groups in environments where you
   may not have easy access to a configurable single-endpoint IPv4
   system.
+
+- The hatop utility now works on Xenial stemcells, and works
+  without mucking about with $PATH and the socket file path.
 
 # Software Updates
 

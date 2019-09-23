@@ -31,4 +31,7 @@ xenial)
   ;;
 esac
 
+echo "$(date) installing hatop wrapper to /usr/bin..."
+cp /var/vcap/packages/haproxy/hatop-wrapper /usr/bin/hatop
+chmod 0755 /usr/bin/hatop
 echo "[$(date)] DONE"

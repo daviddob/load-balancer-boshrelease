@@ -1,0 +1,44 @@
+name: load-balancer
+version: 0.2.0
+commit_hash: "0885869"
+uncommitted_changes: false
+jobs:
+- name: haproxy
+  version: bcf6bdcb83591a85a76192cbe21843f38aec125f0acb616a22d8531a19bbd2da
+  fingerprint: bcf6bdcb83591a85a76192cbe21843f38aec125f0acb616a22d8531a19bbd2da
+  sha1: sha256:d7e65cdbecf098afb5d7d7a80ce5ae0ecd8cea168fbd1165c22f1798ff99c1bd
+  packages:
+  - haproxy
+  - python-debs
+  - ttar
+- name: keepalived
+  version: 18abcf5327f2bbb8924942849f72ef98aa3d3c0527c2b8f6b2257a275e1e5141
+  fingerprint: 18abcf5327f2bbb8924942849f72ef98aa3d3c0527c2b8f6b2257a275e1e5141
+  sha1: sha256:d0c69dfcf70f5ed6cdfe3ba61e0307b9210dd991e4eef8b84fd784826e730b0e
+  packages:
+  - keepalived
+packages:
+- name: haproxy
+  version: 8b71ae76bf725478f84f411595eba0d32caecba0e0883e5b1306135d62410f9f
+  fingerprint: 8b71ae76bf725478f84f411595eba0d32caecba0e0883e5b1306135d62410f9f
+  sha1: sha256:e859bd1cb7a34132dee114421e4dc6728bd33ecc97272ecdc561b04d30d9d911
+  dependencies: []
+- name: keepalived
+  version: 76b9a1e59ea43c1bdff509cac75861be98c9bf479238a5517a0de11e46646a85
+  fingerprint: 76b9a1e59ea43c1bdff509cac75861be98c9bf479238a5517a0de11e46646a85
+  sha1: sha256:55624df1f2787cfbc8619950ce2f071b431ce6be9c1a0f61c14676d060db744b
+  dependencies: []
+- name: python-debs
+  version: da71c36e16130adc7b88e54e9d93a3d96695c7325a35dca66fc0a86e5bcbc3a0
+  fingerprint: da71c36e16130adc7b88e54e9d93a3d96695c7325a35dca66fc0a86e5bcbc3a0
+  sha1: sha256:a6a2e81b2ac068254e3ada17226269ec989298b7073c0fdf44327589f114befb
+  dependencies: []
+- name: ttar
+  version: 6b2e49fb0f98be6681f8d2ca5c7d2a8c74dfc933df218dd59dcb059ef5c7d5ce
+  fingerprint: 6b2e49fb0f98be6681f8d2ca5c7d2a8c74dfc933df218dd59dcb059ef5c7d5ce
+  sha1: sha256:c529ac10e396b12edb8e4e3f00f7a0bc3a66d2a8d3a140b00307a9b2cef3464b
+  dependencies: []
+license:
+  version: 8820acd566a31ce42b08d477883d9e40baab3c05aae65e981699750edc18b481
+  fingerprint: 8820acd566a31ce42b08d477883d9e40baab3c05aae65e981699750edc18b481
+  sha1: sha256:76f81fe55c9df275b105174927ed7ce226544e9093c7dce1ad0044be405f7ce5

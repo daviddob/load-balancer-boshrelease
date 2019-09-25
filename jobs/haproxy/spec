@@ -17,6 +17,15 @@ templates:
 
   bin/pre-start:    bin/pre-start
 
+consumes:
+  - name: gorouter
+    type: http-router
+    optional: true
+
+  - name: ssh-proxy
+    type: ssh_proxy
+    optional: true
+
 properties:
   expert.config:
     description: |
